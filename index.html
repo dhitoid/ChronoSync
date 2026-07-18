@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>ChronoSync Assistant</title>
+    
+    <link rel="manifest" href="manifest.json">
+
+    <style>
+        /* Desain Neumorphism Gelap yang Elegan */
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        h1 {
+            background: -webkit-linear-gradient(#a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: #1e1e1e;
+            border-radius: 20px;
+            padding: 25px;
+            width: 100%;
+            max-width: 350px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+        }
+
+        input[type="text"], input[type="time"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border: 1px solid #444;
+            background: #2a2a2a;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: none;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .btn-permission {
+            background: transparent;
+            border: 1px solid #ec4899;
+            color: #ec4899;
+            margin-bottom: 20px;
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        .task-list {
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .task-item {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #a855f7;
+        }
+
+        .task-time {
+            font-weight: bold;
+            color: #ec4899;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>ChronoSync</h1>
+    <p class="subtitle">Asisten Penjadwal Cerdas</p>
+
+    <div class="card">
+        <!-- Tombol wajib untuk meminta izin notifikasi HP -->
+        <button id="perm-btn" class="btn-permission" onclick="requestPermission()">Aktifkan Notifikasi HP 🔔</button>
+
+        <input type="text" id="task-name" placeholder="Mau diingatkan apa? (Makan, Rapat...)">
+        <input type="time" id="task-time">
+        
+        <button class="btn-primary" onclick="addTask()">Buat Jadwal</button>
+
+        <div class="task-list" id="task-list">
+            <!-- Daftar jadwal muncul di sini -->
+        </div>
+    </div>
+
+    <script>
+        const taskNameInput = document.getElementById('task-name');
+        const taskTimeInput = document.getElementById('task-time');
+        const taskListContainer = document.getElementById('task-list');
+        const permBtn = document.getElementById('perm-btn');
+
+        // Mendaftarkan Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(() => {
+                console.log('Service Worker berhasil ditanam!');
+            });
+        }
+
+        if (Notification.permission === 'granted') {
+            permBtn.style.display = 'none';
+        }
+
+        function requestPermission() {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    alert("Notifikasi diizinkan!");
+                    permBtn.style.display = 'none';
+                }
+            });
+        }
+
+        function addTask() {
+            const name = taskNameInput.value;
+            const time = taskTimeInput.value;
+            if (!name || !time) return;
+
+            let tasks = JSON.parse(localStorage.getItem('chronotasks')) || [];
+            tasks.push({ name, time, notified: false });
+            localStorage.setItem('chronotasks', JSON.stringify(tasks));
+
+            taskNameInput.value = ''; taskTimeInput.value = '';
+            loadTasks();
+        }
+
+        function loadTasks() {
+            let tasks = JSON.parse(localStorage.getItem('chronotasks')) || [];
+            taskListContainer.innerHTML = '';
+            tasks.sort((a, b) => a.time.localeCompare(b.time)).forEach(task => {
+                taskListContainer.innerHTML += `
+                    <div class="task-item"><span>${task.name}</span><span class="task-time">${task.time}</span></div>
+                `;
+            });
+        }
+
+        // Pengecek Waktu yang mengirim pesan ke Service Worker
+        setInterval(() => {
+            let tasks = JSON.parse(localStorage.getItem('chronotasks')) || [];
+            const now = new Date();
+            const currentTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            let updated = false;
+
+            tasks.forEach(task => {
+                if (task.time === currentTime && !task.notified) {
+                    // Mengirim perintah ke Service Worker untuk memunculkan notifikasi
+                    if (navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({
+                            type: 'SHOW_NOTIFICATION',
+                            message: `Jadwal kamu: ${task.name}`
+                        });
+                    }
+                    task.notified = true;
+                    updated = true;
+                }
+            });
+            if (updated) localStorage.setItem('chronotasks', JSON.stringify(tasks));
+        }, 10000);
+
+        loadTasks();
+    </script>
+
+</body>
+</html>
