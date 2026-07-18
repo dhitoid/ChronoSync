@@ -2,191 +2,378 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>ChronoSync Assistant</title>
+    <title>ChronoSync</title>
     
     <link rel="manifest" href="manifest.json">
 
     <style>
-        /* Desain Neumorphism Gelap yang Elegan */
+        /* Desain Glassmorphism & Modern App 2026 */
+        :root {
+            --primary: #a855f7;
+            --secondary: #ec4899;
+            --bg-dark: #0f0c29;
+            --bg-mid: #302b63;
+            --bg-light: #24243e;
+        }
+
         body {
-            background-color: #121212;
-            color: #e0e0e0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Gradient Background ala iOS premium */
+            background: linear-gradient(135deg, var(--bg-dark), var(--bg-mid), var(--bg-light));
+            background-attachment: fixed;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            /* Mencegah efek bounce/scroll berlebih di iPhone */
+            overscroll-behavior-y: none;
+        }
+
+        /* Container seukuran layar HP */
+        .app-container {
+            width: 100%;
+            max-width: 430px; /* Ukuran max iPhone Pro Max */
+            padding: 30px 20px;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            margin: 0;
-            min-height: 100vh;
+        }
+
+        /* Header Dinamis */
+        .header {
+            margin-bottom: 30px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        #greeting {
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.7);
+            margin: 0 0 5px 0;
         }
 
         h1 {
-            background: -webkit-linear-gradient(#a855f7, #ec4899);
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: -webkit-linear-gradient(45deg, var(--secondary), var(--primary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-size: 2.2rem;
-            margin-bottom: 5px;
         }
 
-        .subtitle {
-            color: #888;
-            font-size: 0.9rem;
-            margin-bottom: 30px;
+        /* Glass Card Effect */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.6s ease;
         }
 
-        .card {
-            background: #1e1e1e;
-            border-radius: 20px;
-            padding: 25px;
+        /* Form Inputs yang lebih "Clean" */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        input {
             width: 100%;
-            max-width: 350px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid #333;
-        }
-
-        input[type="text"], input[type="time"] {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border-radius: 10px;
-            border: 1px solid #444;
-            background: #2a2a2a;
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.2);
             color: white;
             font-size: 1rem;
             box-sizing: border-box;
+            outline: none;
+            transition: border 0.3s, box-shadow 0.3s;
         }
 
-        button {
+        input:focus {
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+        }
+
+        /* Styling Input Waktu (Time Picker) agar rapi di iOS */
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            opacity: 0.7;
+        }
+
+        button.btn-primary {
             width: 100%;
-            padding: 15px;
-            border-radius: 10px;
+            padding: 16px;
+            border-radius: 16px;
             border: none;
-            font-weight: bold;
-            font-size: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
             cursor: pointer;
-            transition: transform 0.2s;
+            box-shadow: 0 10px 20px rgba(236, 72, 153, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #a855f7, #ec4899);
-            color: white;
-            margin-bottom: 20px;
+        button.btn-primary:active {
+            transform: scale(0.96);
+            box-shadow: 0 5px 10px rgba(236, 72, 153, 0.2);
         }
 
         .btn-permission {
-            background: transparent;
-            border: 1px solid #ec4899;
-            color: #ec4899;
-            margin-bottom: 20px;
-        }
-
-        button:active {
-            transform: scale(0.97);
-        }
-
-        .task-list {
-            margin-top: 20px;
             width: 100%;
+            background: rgba(236, 72, 153, 0.1);
+            border: 1px solid var(--secondary);
+            color: var(--secondary);
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: none; /* Disembunyikan secara default */
+        }
+
+        /* Task List ala Notifikasi iOS */
+        .task-list-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
         }
 
         .task-item {
-            background: #2a2a2a;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            border-left: 4px solid #a855f7;
+            justify-content: space-between;
+            transition: transform 0.3s;
+            border-left: 4px solid var(--primary);
+        }
+
+        .task-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .task-name {
+            font-weight: 600;
+            font-size: 1.05rem;
         }
 
         .task-time {
-            font-weight: bold;
-            color: #ec4899;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+            margin-top: 4px;
         }
+
+        /* Tombol Hapus */
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        /* Toast Notification (Pengganti Alert) */
+        #toast {
+            position: fixed;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.9);
+            color: #121212;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: top 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #toast.show {
+            top: 40px;
+        }
+
+        /* Animasi */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
     </style>
 </head>
 <body>
 
-    <h1>ChronoSync</h1>
-    <p class="subtitle">Asisten Penjadwal Cerdas</p>
+    <!-- Toast Notification (Popup Cantik) -->
+    <div id="toast"><span>✅</span> <span id="toast-msg">Pesan</span></div>
 
-    <div class="card">
-        <!-- Tombol wajib untuk meminta izin notifikasi HP -->
-        <button id="perm-btn" class="btn-permission" onclick="requestPermission()">Aktifkan Notifikasi HP 🔔</button>
-
-        <input type="text" id="task-name" placeholder="Mau diingatkan apa? (Makan, Rapat...)">
-        <input type="time" id="task-time">
+    <div class="app-container">
         
-        <button class="btn-primary" onclick="addTask()">Buat Jadwal</button>
+        <div class="header">
+            <p id="greeting">Halo,</p>
+            <h1>ChronoSync</h1>
+        </div>
 
-        <div class="task-list" id="task-list">
+        <button id="perm-btn" class="btn-permission" onclick="requestPermission()">🔔 Aktifkan Notifikasi Sistem</button>
+
+        <div class="glass-panel">
+            <div class="input-group">
+                <input type="text" id="task-name" placeholder="Ingatkan saya untuk..." autocomplete="off">
+                <input type="time" id="task-time" required>
+            </div>
+            <button class="btn-primary" onclick="addTask()">Buat Jadwal Baru</button>
+        </div>
+
+        <div class="task-list-header">
+            <span>Jadwal Aktif</span>
+            <span id="task-count" style="color: var(--primary);">0</span>
+        </div>
+
+        <div id="task-list">
             <!-- Daftar jadwal muncul di sini -->
         </div>
+
     </div>
 
     <script>
+        // --- 1. SETTING SIFAT APLIKASI ---
         const taskNameInput = document.getElementById('task-name');
         const taskTimeInput = document.getElementById('task-time');
         const taskListContainer = document.getElementById('task-list');
         const permBtn = document.getElementById('perm-btn');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-msg');
+        const greetingEl = document.getElementById('greeting');
+        const taskCountEl = document.getElementById('task-count');
 
-        // Mendaftarkan Service Worker
+        // Sapaan dinamis berdasarkan jam HP
+        const hour = new Date().getHours();
+        if(hour < 12) greetingEl.innerText = 'Selamat Pagi,';
+        else if(hour < 15) greetingEl.innerText = 'Selamat Siang,';
+        else if(hour < 18) greetingEl.innerText = 'Selamat Sore,';
+        else greetingEl.innerText = 'Selamat Malam,';
+
+        // --- 2. SISTEM NOTIFIKASI & SERVICE WORKER ---
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').then(() => {
-                console.log('Service Worker berhasil ditanam!');
-            });
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Gagal:', err));
         }
 
-        if (Notification.permission === 'granted') {
-            permBtn.style.display = 'none';
+        // Tampilkan tombol izin jika belum diizinkan
+        if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+            permBtn.style.display = 'block';
         }
 
         function requestPermission() {
             Notification.requestPermission().then(permission => {
                 if (permission === 'granted') {
-                    alert("Notifikasi diizinkan!");
+                    showToast("Notifikasi diizinkan!");
                     permBtn.style.display = 'none';
                 }
             });
         }
 
+        // --- 3. LOGIKA APLIKASI (TAMBAH, HAPUS, TAMPIL) ---
+        
+        // Fungsi Toast (Pengganti Alert)
+        function showToast(message) {
+            toastMsg.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
         function addTask() {
-            const name = taskNameInput.value;
+            const name = taskNameInput.value.trim();
             const time = taskTimeInput.value;
-            if (!name || !time) return;
+            
+            if (!name || !time) {
+                showToast("⚠️ Isi nama dan waktu jadwal!");
+                return;
+            }
 
             let tasks = JSON.parse(localStorage.getItem('chronotasks')) || [];
             tasks.push({ name, time, notified: false });
             localStorage.setItem('chronotasks', JSON.stringify(tasks));
 
-            taskNameInput.value = ''; taskTimeInput.value = '';
+            taskNameInput.value = ''; 
+            taskTimeInput.value = '';
+            showToast("Jadwal berhasil dibuat!");
+            loadTasks();
+        }
+
+        function deleteTask(index) {
+            let tasks = JSON.parse(localStorage.getItem('chronotasks')) || [];
+            tasks.splice(index, 1); // Hapus 1 data pada index tersebut
+            localStorage.setItem('chronotasks', JSON.stringify(tasks));
             loadTasks();
         }
 
         function loadTasks() {
             let tasks = JSON.parse(localStorage.getItem('chronotasks')) || [];
             taskListContainer.innerHTML = '';
-            tasks.sort((a, b) => a.time.localeCompare(b.time)).forEach(task => {
+            taskCountEl.innerText = tasks.length;
+
+            if (tasks.length === 0) {
+                taskListContainer.innerHTML = `<p style="text-align:center; color: rgba(255,255,255,0.4); margin-top:30px;">Belum ada jadwal. Santai dulu! ☕</p>`;
+                return;
+            }
+
+            // Urutkan jadwal dari yang terdekat
+            tasks.sort((a, b) => a.time.localeCompare(b.time));
+
+            tasks.forEach((task, index) => {
+                // Memberi warna abu-abu jika sudah lewat/dinotifikasi
+                const opacity = task.notified ? '0.5' : '1'; 
+                
                 taskListContainer.innerHTML += `
-                    <div class="task-item"><span>${task.name}</span><span class="task-time">${task.time}</span></div>
+                    <div class="task-item" style="opacity: ${opacity}">
+                        <div class="task-info">
+                            <span class="task-name">${task.name}</span>
+                            <span class="task-time">⏰ ${task.time} ${task.notified ? '(Selesai)' : ''}</span>
+                        </div>
+                        <button class="delete-btn" onclick="deleteTask(${index})">✕</button>
+                    </div>
                 `;
             });
         }
 
-        // Pengecek Waktu yang mengirim pesan ke Service Worker
+        // --- 4. ENGINE PENGECEK WAKTU ---
         setInterval(() => {
             let tasks = JSON.parse(localStorage.getItem('chronotasks')) || [];
             const now = new Date();
             const currentTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
             let updated = false;
 
-            tasks.forEach(task => {
+            tasks.forEach((task, index) => {
                 if (task.time === currentTime && !task.notified) {
-                    // Mengirim perintah ke Service Worker untuk memunculkan notifikasi
+                    // Panggil Service Worker
                     if (navigator.serviceWorker.controller) {
                         navigator.serviceWorker.controller.postMessage({
                             type: 'SHOW_NOTIFICATION',
@@ -197,9 +384,14 @@
                     updated = true;
                 }
             });
-            if (updated) localStorage.setItem('chronotasks', JSON.stringify(tasks));
+            
+            if (updated) {
+                localStorage.setItem('chronotasks', JSON.stringify(tasks));
+                loadTasks(); // Refresh list agar status berubah jadi (Selesai)
+            }
         }, 10000);
 
+        // Muat data saat aplikasi pertama kali dibuka
         loadTasks();
     </script>
 
